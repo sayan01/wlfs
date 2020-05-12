@@ -6,30 +6,29 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.FileUtils;
+import android.provider.MediaStore;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class MainActivity extends AppCompatActivity {
@@ -39,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
 		protected void onPreExecute() {
 			pb_split.setVisibility(View.VISIBLE);
 			tv_output.setText("Splitting, Please Wait");
+			btn_browse.setEnabled(false);
+			btn_join.setEnabled(false);
+			btn_split.setEnabled(false);
 		}
 
 		@Override
@@ -54,13 +56,17 @@ public class MainActivity extends AppCompatActivity {
 								+ Environment.getExternalStorageDirectory() + "/" + FILE_PREFIX +"*"
 						,Toast.LENGTH_LONG).show();
 			}
+
+			btn_browse.setEnabled(true);
+			btn_join.setEnabled(true);
+			btn_split.setEnabled(true);
 		}
 
 		@Override
 		protected Exception doInBackground(String... strings) {
 			String path = strings[0];
 			try {
-				int counter = 0;    // counts no of megabytes of data read
+				int counter = 1;    // counts no of megabytes of data read
 				int num = 1;        // output file prefix
 
 				FileInputStream fis = new FileInputStream(path);
@@ -107,6 +113,8 @@ public class MainActivity extends AppCompatActivity {
 	private final int REQ_CODE_GET_SPLIT_FILE = 100;
 	private final int BLOCK_SIZE = 64; // Size of each output part (split) in MB
 	private final String FILE_PREFIX = "LFS-part";
+	private final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
+
 	Button btn_join;
 	Button btn_split;
 	Button btn_browse;
@@ -132,7 +140,9 @@ public class MainActivity extends AppCompatActivity {
 		btn_join.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				permCheck();
+				if(!permCheck()) return;
+
+
 			}
 		});
 
@@ -141,7 +151,7 @@ public class MainActivity extends AppCompatActivity {
 			public void onClick(View v) {
 				if(!permCheck()) return;
 				String path = txt_path.getText().toString();
-				if(path == null || path.equals("")){
+				if(path.equals("")){
 					Toast.makeText(MainActivity.this,"Please choose a file.",Toast.LENGTH_LONG).show();
 					return;
 				}
@@ -153,7 +163,7 @@ public class MainActivity extends AppCompatActivity {
 		btn_browse.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				getFileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+				getFileIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
 				getFileIntent.setType("*/*");
 				startActivityForResult(getFileIntent,REQ_CODE_GET_SPLIT_FILE);
 			}
@@ -162,7 +172,6 @@ public class MainActivity extends AppCompatActivity {
 
 	private void deleteparts(){
 		int num = 1;
-		final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
 		File f = new File(EXTERNAL+"/" + FILE_PREFIX +num);
 		while (f.exists()){
 			System.out.println("Deleting "+f.getAbsolutePath());
@@ -177,9 +186,37 @@ public class MainActivity extends AppCompatActivity {
 	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
 		if(data != null){
 			if(requestCode == REQ_CODE_GET_SPLIT_FILE) {
-				String path = data.getData().getPath();
+				String path;
+				path = getPath(data.getData());
 				txt_path.setText(path);
 			}
+		}
+	}
+
+	private String getPath(Uri uri){
+		String path = uri.getPath();
+		if(path == null) return "";
+		String[] token = path.split(":");
+		String device = token[0].substring(token[0].lastIndexOf("/")+1);
+		if(token.length == 1 ||
+				device.contains("audio") ||
+				device.contains("video") ||
+				device.contains("image") ||
+				device.contains("msf")){
+			Toast.makeText(MainActivity.this,
+					"Please choose file from internal/external storage",
+					Toast.LENGTH_LONG).show();
+			return "";
+		}
+		path = token[1];
+		for ( int i = 2; i < token.length; i++){
+			path += ":"+token[i];
+		}
+		if (device.contains("primary")){
+			return EXTERNAL+"/"+path;
+		}
+		else{
+			return "/storage/"+device+"/"+path;
 		}
 	}
 
