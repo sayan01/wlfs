@@ -5,4 +5,30 @@
     <string name="hint_text_input_split">path to file to split</string>
     <string name="hint_text_input_join">path to folder containing partfiles</string>
     <string name="btn_browse">BROWSE</string>
+
+    <string name="permission_title">Permission Required</string>
+    <string name="permission_body">
+        The app needs read and write permission to be able to split and join the files
+    </string>
+
+    <string name="split_progress">Splitting, Please Wait</string>
+    <string name="split_invalid_path">File path is invalid</string>
+    <string name="split_empty_path">Please choose a file to split</string>
+    <string name="split_fin">Splitting Complete</string>
+    <string name="split_cancel">Splitting Cancelled</string>
+    <string name="split_savepath">LFS partfiles are saved in %1$s*</string>
+    <string name="split_unknown_path">Please choose file from internal/external storage</string>
+
+
+    <string name="join_unknown_path">Please choose folder from internal/external storage</string>
+    <string name="join_invalid_path">Directory does not exist</string>
+    <string name="join_empty_path">Please choose a folder where partfiles are present</string>
+    <string name="join_found">%1$d LFS Partfiles found in directory</string>
+    <string name="join_progress">Joining, Please Wait</string>
+    <string name="join_fin">Joining Complete</string>
+    <string name="join_savepath">File saved in %1$s</string>
+    <string name="join_cancel">Joining Cancelled</string>
+
+
+
 </resources>
