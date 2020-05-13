@@ -11,12 +11,13 @@ import androidx.annotation.Nullable;
 
 import java.io.File;
 
-public class FileU {
+@SuppressWarnings("StringConcatenationInLoop")
+class FileU {
 	private static final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
 
 	static String getTree(@Nullable Uri uri){
 		try {
-			String rv = "";
+			String rv;
 			if (uri == null) return "";
 			String path = uri.getPath();
 			if (path == null) return "";
@@ -53,7 +54,7 @@ public class FileU {
 	static String getPath(Context context, Uri uri){
 
 		try {
-			String rv = "";
+			String rv;
 			String path = uri.getPath();
 			if (path == null) return "";
 			String[] token = path.split(":");
@@ -68,7 +69,7 @@ public class FileU {
 				final String[] split = docId.split(":");
 				final String type = split[0];
 
-				Uri contentUri = null;
+				Uri contentUri;
 				if ("image".equals(type)) {
 					contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
 				} else if ("video".equals(type)) {
@@ -78,11 +79,10 @@ public class FileU {
 				} else {
 					return "";
 				}
-				final String selection = "_id=?";
 				final String[] selectionArgs = new String[]{
 						split[1]
 				};
-				rv = FileU.getDataColumn(context, contentUri, selection, selectionArgs);
+				return FileU.getDataColumn(context, contentUri, selectionArgs);
 			}
 
 			path = token[1];
@@ -104,14 +104,14 @@ public class FileU {
 		}
 	}
 
-	static String getDataColumn(Context context, Uri uri, String selection,
-								String[] selectionArgs) {
+	private static String getDataColumn(Context context, Uri uri,
+										String[] selectionArgs) {
 
 		final String column = "_data";
 		final String[] projection = {
 				column
 		};
-		try (Cursor cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+		try (Cursor cursor = context.getContentResolver().query(uri, projection, "_id=?", selectionArgs,
 				null)) {
 			if (cursor != null && cursor.moveToFirst()) {
 				final int index = cursor.getColumnIndexOrThrow(column);
