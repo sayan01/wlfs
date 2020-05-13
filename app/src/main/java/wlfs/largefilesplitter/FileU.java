@@ -1,50 +1,61 @@
 package wlfs.largefilesplitter;
 
-import android.annotation.SuppressLint;
-import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
-import android.text.TextUtils;
-import android.util.Log;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
+
+import androidx.annotation.Nullable;
+
 public class FileU {
-	public static String getPath(final Context context, final Uri uri) {
+	private static final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
 
-		final boolean isKitKat = Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT;
+	static String getTree(@Nullable Uri uri){
+		try {
+			if (uri == null) return "";
+			String path = uri.getPath();
+			if (path == null) return "";
+			String[] token = path.split(":");
+			String device = token[0].substring(token[0].lastIndexOf("/") + 1);
 
-		// DocumentProvider
-		if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
-			// ExternalStorageProvider
-			if (isExternalStorageDocument(uri)) {
-				final String docId = DocumentsContract.getDocumentId(uri);
-				final String[] split = docId.split(":");
-				final String type = split[0];
-
-				if ("primary".equalsIgnoreCase(type)) {
-					return Environment.getExternalStorageDirectory() + "/" + split[1];
-				}
-
-				// TODO handle non-primary volumes
+			if (!path.contains(":")) {
+				return path.contains("download") ? Environment.
+						getExternalStoragePublicDirectory(
+								Environment.DIRECTORY_DOWNLOADS)
+						.getAbsolutePath()+"/" : "";
 			}
-			// DownloadsProvider
-			else if (isDownloadsDocument(uri)) {
 
-				final String id = DocumentsContract.getDocumentId(uri);
-				final Uri contentUri = ContentUris.withAppendedId(
-						Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
-
-				return getDataColumn(context, contentUri, null, null);
+			path = (token.length > 1)?token[1]:"";
+			for (int i = 2; i < token.length; i++) {
+				path += ":" + token[i];
 			}
-			// MediaProvider
-			else if (isMediaDocument(uri)) {
+
+			if (device.contains("primary")) {
+				return EXTERNAL + "/" + path + "/" ;
+			} else {
+				return "/storage/" + device + "/" + path + "/";
+			}
+		}
+		catch (Exception e){
+			return "";
+		}
+	}
+
+	static String getPath(Context context, Uri uri){
+
+		try {
+			String path = uri.getPath();
+			if (path == null) return "";
+			String[] token = path.split(":");
+			String device = token[0].substring(token[0].lastIndexOf("/") + 1);
+
+			if (token.length == 1 || device.contains("msf")) {
+				return "";
+			}
+
+			if (FileU.isMediaDocument(uri)) {
 				final String docId = DocumentsContract.getDocumentId(uri);
 				final String[] split = docId.split(":");
 				final String type = split[0];
@@ -56,36 +67,33 @@ public class FileU {
 					contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI;
 				} else if ("audio".equals(type)) {
 					contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+				} else {
+					return "";
 				}
-
 				final String selection = "_id=?";
-				final String[] selectionArgs = new String[] {
+				final String[] selectionArgs = new String[]{
 						split[1]
 				};
+				return FileU.getDataColumn(context, contentUri, selection, selectionArgs);
+			}
 
-				return getDataColumn(context, contentUri, selection, selectionArgs);
+			path = token[1];
+			for (int i = 2; i < token.length; i++) {
+				path += ":" + token[i];
+			}
+			if (device.contains("primary")) {
+				return EXTERNAL + "/" + path;
+			} else {
+				return "/storage/" + device + "/" + path;
 			}
 		}
-		// MediaStore (and general)
-		else if ("content".equalsIgnoreCase(uri.getScheme())) {
-
-			// Return the remote address
-			if (isGooglePhotosUri(uri))
-				return uri.getLastPathSegment();
-
-			return uri.getPath();
+		catch (Exception e){
+			return "";
 		}
-		// File
-		else if ("file".equalsIgnoreCase(uri.getScheme())) {
-			return uri.getPath();
-		}
-		else return uri.getPath();
-
-		return uri.getPath();
 	}
 
-	private static String getDataColumn(Context context, Uri uri, String selection,
-										String[] selectionArgs) {
+	static String getDataColumn(Context context, Uri uri, String selection,
+								String[] selectionArgs) {
 
 		final String column = "_data";
 		final String[] projection = {
@@ -97,40 +105,14 @@ public class FileU {
 				final int index = cursor.getColumnIndexOrThrow(column);
 				return cursor.getString(index);
 			}
+		} catch (Exception e) {
+			return "";
 		}
 		return uri.getPath();
 	}
 
-
-	/**
-	 * @param uri The Uri to check.
-	 * @return Whether the Uri authority is ExternalStorageProvider.
-	 */
-	public static boolean isExternalStorageDocument(Uri uri) {
-		return "com.android.externalstorage.documents".equals(uri.getAuthority());
-	}
-
-	/**
-	 * @param uri The Uri to check.
-	 * @return Whether the Uri authority is DownloadsProvider.
-	 */
-	public static boolean isDownloadsDocument(Uri uri) {
-		return "com.android.providers.downloads.documents".equals(uri.getAuthority());
-	}
-
-	/**
-	 * @param uri The Uri to check.
-	 * @return Whether the Uri authority is MediaProvider.
-	 */
-	public static boolean isMediaDocument(Uri uri) {
+	private static boolean isMediaDocument(Uri uri) {
 		return "com.android.providers.media.documents".equals(uri.getAuthority());
 	}
 
-	/**
-	 * @param uri The Uri to check.
-	 * @return Whether the Uri authority is Google Photos.
-	 */
-	public static boolean isGooglePhotosUri(Uri uri) {
-		return "com.google.android.apps.photos.content".equals(uri.getAuthority());
-	}
 }

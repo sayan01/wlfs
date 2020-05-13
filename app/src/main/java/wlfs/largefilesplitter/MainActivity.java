@@ -11,11 +11,14 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.FileUtils;
+import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -23,8 +26,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -111,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private final int STORAGE_PERM_CODE = 1;
 	private final int REQ_CODE_GET_SPLIT_FILE = 100;
+	private final int REQ_CODE_GET_JOIN_FILE = 150;
 	private final int BLOCK_SIZE = 64; // Size of each output part (split) in MB
 	private final String FILE_PREFIX = "LFS-part";
 	private final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -142,6 +148,9 @@ public class MainActivity extends AppCompatActivity {
 			public void onClick(View v) {
 				if(!permCheck()) return;
 
+				getFileIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+				startActivityForResult(getFileIntent,REQ_CODE_GET_JOIN_FILE);
+
 
 			}
 		});
@@ -170,6 +179,44 @@ public class MainActivity extends AppCompatActivity {
 		});
 	}
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+		if(data != null){
+			if(requestCode == REQ_CODE_GET_SPLIT_FILE) {
+				String path;
+				path = FileU.getPath(MainActivity.this, data.getData());
+				if  (path.equals("")){
+					Toast.makeText(MainActivity.this,
+							"Please choose file from internal/external storage",
+							Toast.LENGTH_LONG).show();
+				}
+				txt_path.setText(path);
+			}
+
+			if(requestCode == REQ_CODE_GET_JOIN_FILE) {
+				String path;
+				path = FileU.getTree(data.getData());
+				if  (path.equals("")){
+					Toast.makeText(MainActivity.this,
+							"Please choose file from internal/external storage",
+							Toast.LENGTH_LONG).show();
+				}
+				File f = new File(path);
+				File[] txt = f.listFiles(new FilenameFilter() {
+					@Override
+					public boolean accept(File dir, String name) {
+						return name.startsWith(FILE_PREFIX);
+					}
+				});
+				String list = "";
+				for (File file : txt)
+					list += file.getName() + "\n";
+				tv_output.setText(list);
+			}
+		}
+	}
+
+
 	private void deleteparts(){
 		int num = 1;
 		File f = new File(EXTERNAL+"/" + FILE_PREFIX +num);
@@ -179,44 +226,6 @@ public class MainActivity extends AppCompatActivity {
 				System.out.println("Error: could not delete output part file\t"+f.getAbsolutePath());
 			num++;
 			f = new File(EXTERNAL+"/"+ FILE_PREFIX +num);
-		}
-	}
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-		if(data != null){
-			if(requestCode == REQ_CODE_GET_SPLIT_FILE) {
-				String path;
-				path = getPath(data.getData());
-				txt_path.setText(path);
-			}
-		}
-	}
-
-	private String getPath(Uri uri){
-		String path = uri.getPath();
-		if(path == null) return "";
-		String[] token = path.split(":");
-		String device = token[0].substring(token[0].lastIndexOf("/")+1);
-		if(token.length == 1 ||
-				device.contains("audio") ||
-				device.contains("video") ||
-				device.contains("image") ||
-				device.contains("msf")){
-			Toast.makeText(MainActivity.this,
-					"Please choose file from internal/external storage",
-					Toast.LENGTH_LONG).show();
-			return "";
-		}
-		path = token[1];
-		for ( int i = 2; i < token.length; i++){
-			path += ":"+token[i];
-		}
-		if (device.contains("primary")){
-			return EXTERNAL+"/"+path;
-		}
-		else{
-			return "/storage/"+device+"/"+path;
 		}
 	}
 
