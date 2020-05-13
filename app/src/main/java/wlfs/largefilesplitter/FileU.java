@@ -9,11 +9,14 @@ import android.provider.MediaStore;
 
 import androidx.annotation.Nullable;
 
+import java.io.File;
+
 public class FileU {
 	private static final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
 
 	static String getTree(@Nullable Uri uri){
 		try {
+			String rv = "";
 			if (uri == null) return "";
 			String path = uri.getPath();
 			if (path == null) return "";
@@ -24,7 +27,7 @@ public class FileU {
 				return path.contains("download") ? Environment.
 						getExternalStoragePublicDirectory(
 								Environment.DIRECTORY_DOWNLOADS)
-						.getAbsolutePath()+"/" : "";
+						.getAbsolutePath() : "";
 			}
 
 			path = (token.length > 1)?token[1]:"";
@@ -33,10 +36,14 @@ public class FileU {
 			}
 
 			if (device.contains("primary")) {
-				return EXTERNAL + "/" + path + "/" ;
+				rv = EXTERNAL + "/" + path ;
 			} else {
-				return "/storage/" + device + "/" + path + "/";
+				rv = "/storage/" + device + "/" + path;
 			}
+			File f = new File(rv);
+			if(!f.exists())return "";
+
+			return rv;
 		}
 		catch (Exception e){
 			return "";
@@ -46,6 +53,7 @@ public class FileU {
 	static String getPath(Context context, Uri uri){
 
 		try {
+			String rv = "";
 			String path = uri.getPath();
 			if (path == null) return "";
 			String[] token = path.split(":");
@@ -74,7 +82,7 @@ public class FileU {
 				final String[] selectionArgs = new String[]{
 						split[1]
 				};
-				return FileU.getDataColumn(context, contentUri, selection, selectionArgs);
+				rv = FileU.getDataColumn(context, contentUri, selection, selectionArgs);
 			}
 
 			path = token[1];
@@ -82,10 +90,14 @@ public class FileU {
 				path += ":" + token[i];
 			}
 			if (device.contains("primary")) {
-				return EXTERNAL + "/" + path;
+				rv = EXTERNAL + "/" + path;
 			} else {
-				return "/storage/" + device + "/" + path;
+				rv = "/storage/" + device + "/" + path;
 			}
+			File f = new File(rv);
+			if(!f.exists()) return "";
+
+			return rv;
 		}
 		catch (Exception e){
 			return "";
