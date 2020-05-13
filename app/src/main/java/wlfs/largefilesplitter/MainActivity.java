@@ -1,23 +1,11 @@
 package wlfs.largefilesplitter;
 
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.net.Uri;
-import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.FileUtils;
-import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -25,14 +13,18 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
@@ -68,19 +60,24 @@ public class MainActivity extends AppCompatActivity {
 		}
 
 		@Override
+		protected void onCancelled() {
+
+			tv_output.setText("Error");
+		}
+
+		@Override
 		protected Exception doInBackground(String... strings) {
 			String path = strings[0];
 			try {
 				int counter = 1;    // counts no of megabytes of data read
 				int num = 1;        // output file prefix
-
-				FileInputStream fis = new FileInputStream(path);
+				File f = new File(path);
+				FileInputStream fis = new FileInputStream(f);
 				FileOutputStream fos = new FileOutputStream(
 						Environment.getExternalStorageDirectory().getAbsolutePath() +"/" +( FILE_PREFIX + num ));
 
-				byte[] buffer = new byte[1024*1024];  // 1 MB
-
-				int blocks = (int) Math.ceil(fis.available()/(1024.0*1024));
+				byte[] buffer = new byte[BUFFER_SIZE];  // 1 MB
+				int blocks = (int) (f.length()/(BUFFER_SIZE));
 				publishProgress(0,blocks);
 
 				while(fis.read(buffer) != -1){
@@ -95,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
 					counter ++;                     // increase MB counter
 				}
 				fos.close();                        // close the last part file
+				fis.close();
 			}
 			catch(IOException ioe){
 				ioe.printStackTrace();
@@ -118,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
 	private final int REQ_CODE_GET_SPLIT_FILE = 100;
 	private final int REQ_CODE_GET_JOIN_FILE = 150;
 	private final int BLOCK_SIZE = 64; // Size of each output part (split) in MB
+	private final int BUFFER_SIZE = 1024 * 1024; // 1MB
 	private final String FILE_PREFIX = "LFS-part";
 	private final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
 
@@ -142,7 +141,6 @@ public class MainActivity extends AppCompatActivity {
 		pb_split = findViewById(R.id.pb_split);
 
 		pb_split.setVisibility(View.INVISIBLE);
-
 		btn_join.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
