@@ -2,6 +2,7 @@
     <string name="app_name">Large File Splitter</string>
     <string name="btn_split">SPLIT</string>
     <string name="btn_join">JOIN</string>
-    <string name="hint_text_input_split">Enter Path to File</string>
+    <string name="hint_text_input_split">path to file to split</string>
+    <string name="hint_text_input_join">path to folder containing partfiles</string>
     <string name="btn_browse">BROWSE</string>
 </resources>
