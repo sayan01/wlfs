@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -35,14 +34,16 @@ public class MainActivity extends AppCompatActivity {
 		protected void onPreExecute() {
 			pb_split.setVisibility(View.VISIBLE);
 			tv_output.setText("Splitting, Please Wait");
-			btn_browse.setEnabled(false);
+			btn_browse_split.setEnabled(false);
+			btn_browse_join.setEnabled(false);
 			btn_join.setEnabled(false);
 			btn_split.setEnabled(false);
+			txt_path.setEnabled(false);
+			txt_dir.setEnabled(false);
 		}
 
 		@Override
 		protected void onPostExecute(Exception e) {
-			pb_split.setVisibility(View.INVISIBLE);
 			if(e != null){
 				Toast.makeText(MainActivity.this,"Invalid File Path",Toast.LENGTH_LONG).show();
 				tv_output.setText("File Path is not a valid path");
@@ -54,9 +55,14 @@ public class MainActivity extends AppCompatActivity {
 						,Toast.LENGTH_LONG).show();
 			}
 
-			btn_browse.setEnabled(true);
+			btn_browse_split.setEnabled(true);
+			btn_browse_join.setEnabled(true);
 			btn_join.setEnabled(true);
 			btn_split.setEnabled(true);
+			txt_dir.setEnabled(true);
+			txt_path.setEnabled(true);
+			pb_split.setVisibility(View.INVISIBLE);
+
 		}
 
 		@Override
@@ -120,13 +126,17 @@ public class MainActivity extends AppCompatActivity {
 	private final String FILE_PREFIX = "LFS-part";
 	private final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
 
-	Button btn_join;
-	Button btn_split;
-	Button btn_browse;
-	Intent getFileIntent;
-	TextView tv_output;
-	EditText txt_path;
-	ProgressBar pb_split;
+	private Button btn_join;
+	private Button btn_split;
+	private Button btn_browse_split;
+	private Button btn_browse_join;
+	private TextView tv_output;
+	private EditText txt_dir;
+	private EditText txt_path;
+	private ProgressBar pb_split;
+	private View view_part;
+
+	private Intent getFileIntent;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -135,19 +145,21 @@ public class MainActivity extends AppCompatActivity {
 
 		btn_join = findViewById(R.id.btn_join);
 		btn_split = findViewById(R.id.btn_split);
-		btn_browse = findViewById(R.id.btn_browse);
+		btn_browse_split = findViewById(R.id.btn_browse_split);
+		btn_browse_join = findViewById(R.id.btn_browse_join);
 		tv_output = findViewById(R.id.tv_output);
 		txt_path = findViewById(R.id.txt_path);
+		txt_dir = findViewById(R.id.txt_dir);
 		pb_split = findViewById(R.id.pb_split);
+		view_part = findViewById(R.id.view_parts);
 
 		pb_split.setVisibility(View.INVISIBLE);
+//		view_part.
+
 		btn_join.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				if(!permCheck()) return;
-
-				getFileIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-				startActivityForResult(getFileIntent,REQ_CODE_GET_JOIN_FILE);
 
 
 			}
@@ -167,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-		btn_browse.setOnClickListener(new View.OnClickListener() {
+		btn_browse_split.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
 				getFileIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
@@ -175,11 +187,21 @@ public class MainActivity extends AppCompatActivity {
 				startActivityForResult(getFileIntent,REQ_CODE_GET_SPLIT_FILE);
 			}
 		});
+
+		btn_browse_join.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+
+				getFileIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+				startActivityForResult(getFileIntent,REQ_CODE_GET_JOIN_FILE);
+
+			}
+		});
 	}
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-		if(data != null){
+		if(data != null && resultCode == RESULT_OK){
 			if(requestCode == REQ_CODE_GET_SPLIT_FILE) {
 				String path;
 				path = FileU.getPath(MainActivity.this, data.getData());
@@ -187,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
 					Toast.makeText(MainActivity.this,
 							"Please choose file from internal/external storage",
 							Toast.LENGTH_LONG).show();
+					return;
 				}
 				txt_path.setText(path);
 			}
@@ -198,7 +221,11 @@ public class MainActivity extends AppCompatActivity {
 					Toast.makeText(MainActivity.this,
 							"Please choose file from internal/external storage",
 							Toast.LENGTH_LONG).show();
+					return;
 				}
+
+				txt_dir.setText(path);
+
 				File f = new File(path);
 				File[] txt = f.listFiles(new FilenameFilter() {
 					@Override
@@ -206,6 +233,7 @@ public class MainActivity extends AppCompatActivity {
 						return name.startsWith(FILE_PREFIX);
 					}
 				});
+				if(txt == null) return;
 				String list = "";
 				for (File file : txt)
 					list += file.getName() + "\n";
@@ -219,7 +247,6 @@ public class MainActivity extends AppCompatActivity {
 		int num = 1;
 		File f = new File(EXTERNAL+"/" + FILE_PREFIX +num);
 		while (f.exists()){
-			System.out.println("Deleting "+f.getAbsolutePath());
 			if(!f.delete())
 				System.out.println("Error: could not delete output part file\t"+f.getAbsolutePath());
 			num++;
