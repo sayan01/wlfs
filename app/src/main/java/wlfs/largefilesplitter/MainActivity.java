@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
 								 SPLIT_FILE_PREFIX + num + EXTENSION ));
 
 				byte[] buffer = new byte[BUFFER_SIZE];  // 1 MB
-				int blocks = (int) (f.length()/(BUFFER_SIZE));
+				int blocks = (int) Math.ceil(f.length()/(1d*BUFFER_SIZE));
 				publishProgress(0,blocks);
 
 				while(fis.read(buffer) != -1){
@@ -199,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
 				// Calculate total size of all partfiles
 				int blocks = 0;
 				for (File f : partfiles)
-					blocks += (int) (f.length()/BUFFER_SIZE);
+					blocks += (int) Math.ceil(1d*f.length()/BUFFER_SIZE);
 
 				for (File part : partfiles) {
 					fis = new FileInputStream(part);
@@ -407,26 +407,12 @@ public class MainActivity extends AppCompatActivity {
 			return;
 		}
 		long bytes = file.length();
-		double sizeh = 0d;
-		double GB = 1024 * 1024 * 1024;
-		double MB = 1024 * 1024;
-		double KB = 1024;
-		String unit = "bytes";
-		if(bytes > GB){
-			sizeh = bytes/GB ;
-			unit = "GB";
-		}
-		else if(bytes > MB){
-			sizeh = bytes/MB ;
-			unit = "MB";
-		}
-		else if(bytes > KB){
-			sizeh = bytes/KB ;
-			unit = "KB";
-		}
-		String size = String.format(Locale.getDefault(),"%3.2f",sizeh);
-		int parts = (int) (bytes/BLOCK_SIZE);
-		tv_output_split.setText(String.format("%.40s%n%s %s%n", file.getName(), size,unit));
+
+		String size = getHumanReadableFileSize(bytes);
+		int parts = (int) Math.ceil(1d*bytes/(BLOCK_SIZE*BUFFER_SIZE));
+		String block_size = getHumanReadableFileSize(BLOCK_SIZE*BUFFER_SIZE);
+		tv_output_split.setText(String.format(Locale.getDefault(),"%.40s%n%s%n" +
+				"will be split into %d %s parts", file.getName(), size,parts,block_size));
 	}
 
 	private void deleteParts(){
@@ -446,6 +432,26 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
+	private String getHumanReadableFileSize(long bytes){
+		double sizeh = bytes;
+		double GB = 1024 * 1024 * 1024;
+		double MB = 1024 * 1024;
+		double KB = 1024;
+		String unit = "bytes";
+		if(bytes > GB){
+			sizeh = bytes/GB ;
+			unit = "GB";
+		}
+		else if(bytes > MB){
+			sizeh = bytes/MB ;
+			unit = "MB";
+		}
+		else if(bytes > KB){
+			sizeh = bytes/KB ;
+			unit = "KB";
+		}
+		return String.format(Locale.getDefault(),"%3.2f %s",sizeh,unit);
+	}
 
 	private boolean permissionRequired(){
 		if(ContextCompat.checkSelfPermission(MainActivity.this, WRITE_EXTERNAL_STORAGE)
