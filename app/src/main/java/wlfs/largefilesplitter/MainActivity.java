@@ -31,7 +31,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Locale;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 				FileInputStream fis = new FileInputStream(f);
 				FileOutputStream fos = new FileOutputStream(
 						new File(SPLIT_FILE_PATH,
-								 SPLIT_FILE_PREFIX + num + EXTENSION ));
+								 SPLIT_FILE_PREFIX + num + EXTENSION + ".LFS" ));
 
 				byte[] buffer = new byte[BUFFER_SIZE];  // 1 MB
 				int blocks = (int) Math.ceil(f.length()/(1d*BUFFER_SIZE));
@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
 						fos.close();                                    // close current output file
 						fos = new FileOutputStream(                     // and open a new output file
 								new File(SPLIT_FILE_PATH,
-										SPLIT_FILE_PREFIX + num + EXTENSION ));
+										SPLIT_FILE_PREFIX + num + EXTENSION + ".LFS" ));
 					}
 					fos.write(buffer);              // write data from input file to output part
 					counter ++;                     // increase MB counter
@@ -145,6 +145,23 @@ public class MainActivity extends AppCompatActivity {
 
 			updateTxtOutputJoin();
 
+			new AlertDialog.Builder(MainActivity.this)
+					.setTitle("Share partfiles")
+					.setMessage("Do you want to share partfiles? ")
+					.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							shareFiles(new File(SPLIT_FILE_PATH));
+						}
+					})
+					.setNegativeButton("No", new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+							dialog.dismiss();
+						}
+					})
+					.create().show();
+
 		}
 
 		@Override
@@ -187,7 +204,7 @@ public class MainActivity extends AppCompatActivity {
 				if(partfiles == null || partfiles.length < 1){
 					return new Exception();
 				}
-				String EXTENSION =  getExtension(partfiles[0].getName());
+				String EXTENSION =  getExtension(removeLFS(partfiles[0].getName()));
 				FileInputStream fis;
 				File fout = new File(new File(JOIN_FILE_PATH),JOIN_FILE_PREFIX + EXTENSION);
 														// Checking if file already exists,
@@ -359,7 +376,6 @@ public class MainActivity extends AppCompatActivity {
 				}
 				txt_path.setText(path);
 				updateTxtOutputSplit();
-				shareFile(new File(path));
 			}
 
 			if (requestCode == REQ_CODE_GET_JOIN_FILE) {
@@ -503,22 +519,43 @@ public class MainActivity extends AppCompatActivity {
 		if(ind == -1) return "";
 		return fileName.substring(ind);
 	}
-	private void shareFile(File file) {
+	private void shareFiles(@Nullable File dir) {
+		if(dir == null){
+			dir = new File(SPLIT_FILE_PATH);
+		}
 
-		Intent intentShareFile = new Intent(Intent.ACTION_SEND);
+		File[] partFiles = dir.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(SPLIT_FILE_PREFIX) && name.endsWith(".LFS");
+//				return true;
+			}
+		});
+		if(partFiles == null || partFiles.length < 1)	return;
 
-		Uri uri = FileProvider.getUriForFile(
-				MainActivity.this,
-				MainActivity.this.
-						getApplicationContext().getPackageName() + ".provider",
-				file);
-		intentShareFile.setDataAndType(uri ,URLConnection.guessContentTypeFromName(file.getName()));
+		ArrayList<Uri> uris = new ArrayList<>();
+		for(File file : partFiles){
+
+			uris.add(
+					FileProvider.getUriForFile(
+					MainActivity.this,
+					MainActivity.this.
+							getApplicationContext().getPackageName() + ".provider",
+					file
+			));
+		}
+
+		Intent intentShareFile = new Intent(Intent.ACTION_SEND_MULTIPLE);
 		intentShareFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//
-//		intentShareFile.putExtra(Intent.EXTRA_STREAM,
-//				Uri.parse("file://"+file.getAbsolutePath()));
+		intentShareFile.setType("*/*");
+		intentShareFile.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
 
-		startActivity(Intent.createChooser(intentShareFile, "Share File aaaaaaaaaaaaaaaa"));
+		startActivity(Intent.createChooser(intentShareFile, "Share File"));
 
+
+	}
+
+	private String removeLFS(String filename){
+		return filename.substring(0,filename.length()-4);
 	}
 }
