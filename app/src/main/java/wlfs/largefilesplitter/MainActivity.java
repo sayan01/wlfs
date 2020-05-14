@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -23,15 +24,18 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.net.URLConnection;
 import java.util.Locale;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -355,6 +359,7 @@ public class MainActivity extends AppCompatActivity {
 				}
 				txt_path.setText(path);
 				updateTxtOutputSplit();
+				shareFile(new File(path));
 			}
 
 			if (requestCode == REQ_CODE_GET_JOIN_FILE) {
@@ -411,8 +416,10 @@ public class MainActivity extends AppCompatActivity {
 		String size = getHumanReadableFileSize(bytes);
 		int parts = (int) Math.ceil(1d*bytes/(BLOCK_SIZE*BUFFER_SIZE));
 		String block_size = getHumanReadableFileSize(BLOCK_SIZE*BUFFER_SIZE);
-		tv_output_split.setText(String.format(Locale.getDefault(),"%.40s%n%s%n" +
-				"will be split into %d %s parts", file.getName(), size,parts,block_size));
+		String plural = (parts > 1)?"parts":"part";
+		tv_output_split.setText(String.format(Locale.getDefault(),
+				"%.40s%n%s%n will be split into %d %s (%s each)",
+				file.getName(), size,parts,plural,block_size));
 	}
 
 	private void deleteParts(){
@@ -495,5 +502,23 @@ public class MainActivity extends AppCompatActivity {
 		int ind = fileName.lastIndexOf(".");
 		if(ind == -1) return "";
 		return fileName.substring(ind);
+	}
+	private void shareFile(File file) {
+
+		Intent intentShareFile = new Intent(Intent.ACTION_SEND);
+
+		Uri uri = FileProvider.getUriForFile(
+				MainActivity.this,
+				MainActivity.this.
+						getApplicationContext().getPackageName() + ".provider",
+				file);
+		intentShareFile.setDataAndType(uri ,URLConnection.guessContentTypeFromName(file.getName()));
+		intentShareFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//
+//		intentShareFile.putExtra(Intent.EXTRA_STREAM,
+//				Uri.parse("file://"+file.getAbsolutePath()));
+
+		startActivity(Intent.createChooser(intentShareFile, "Share File aaaaaaaaaaaaaaaa"));
+
 	}
 }
