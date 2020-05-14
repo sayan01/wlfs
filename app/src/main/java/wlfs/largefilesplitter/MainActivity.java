@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Locale;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
@@ -39,8 +40,11 @@ public class MainActivity extends AppCompatActivity {
 	private final int REQ_CODE_GET_JOIN_FILE = 150;
 	private final int BLOCK_SIZE = 64; // Size of each output part (split) in MB
 	private final int BUFFER_SIZE = 1024 * 1024; // 1MB
-	private final String FILE_PREFIX = "LFS-part";
+	private final String SPLIT_FILE_PREFIX = "LFS-part";
+	private final String JOIN_FILE_PREFIX = "LFS-output";
 	private final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
+	private final String SPLIT_FILE_PATH = EXTERNAL;
+	private final String JOIN_FILE_PATH = EXTERNAL;
 
 	private Button btn_join;
 	private Button btn_split;
@@ -71,12 +75,14 @@ public class MainActivity extends AppCompatActivity {
 		protected Exception doInBackground(String... strings) {
 			String path = strings[0];
 			try {
-				int counter = 1;    // counts no of megabytes of data read
+				int counter = 0;    // counts no of megabytes of data read
 				int num = 1;        // output file prefix
 				File f = new File(path);
+				String EXTENSION = getExtension(f.getName());
 				FileInputStream fis = new FileInputStream(f);
 				FileOutputStream fos = new FileOutputStream(
-						Environment.getExternalStorageDirectory().getAbsolutePath() +"/" +( FILE_PREFIX + num ));
+						new File(SPLIT_FILE_PATH,
+								 SPLIT_FILE_PREFIX + num + EXTENSION ));
 
 				byte[] buffer = new byte[BUFFER_SIZE];  // 1 MB
 				int blocks = (int) (f.length()/(BUFFER_SIZE));
@@ -84,11 +90,12 @@ public class MainActivity extends AppCompatActivity {
 
 				while(fis.read(buffer) != -1){
 					publishProgress(counter,blocks);                    // update progressbar
-					if(counter % BLOCK_SIZE == 0){
+					if(counter % BLOCK_SIZE == 0 && counter != 0){
 						num++;                                          // go to next file
 						fos.close();                                    // close current output file
 						fos = new FileOutputStream(                     // and open a new output file
-								Environment.getExternalStorageDirectory().getAbsoluteFile()+"/" + FILE_PREFIX +num);
+								new File(SPLIT_FILE_PATH,
+										SPLIT_FILE_PREFIX + num + EXTENSION ));
 					}
 					fos.write(buffer);              // write data from input file to output part
 					counter ++;                     // increase MB counter
@@ -121,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 				tv_output_split.setText(getString(R.string.split_fin));
 				Toast.makeText(MainActivity.this,
 						getString(R.string.split_savepath,
-								EXTERNAL+"/"+FILE_PREFIX),
+								SPLIT_FILE_PATH + "/" + SPLIT_FILE_PREFIX),
 						Toast.LENGTH_LONG).show();
 			}
 
@@ -170,37 +177,41 @@ public class MainActivity extends AppCompatActivity {
 				File[] partfiles = fdir.listFiles(new FilenameFilter() {
 					@Override
 					public boolean accept(File dir, String name) {
-						return name.startsWith(FILE_PREFIX);
+						return name.startsWith(SPLIT_FILE_PREFIX);
 					}
 				});
 				if(partfiles == null || partfiles.length < 1){
 					return new Exception();
 				}
+				String EXTENSION =  getExtension(partfiles[0].getName());
 				FileInputStream fis;
-				File fout = new File(new File(EXTERNAL),"LFS-output");
-				if(fout.exists()) {
-					boolean success = fout.delete();
-					if (!success){
-						Log.d("ERROR","Unable to delete file "+ fout.getAbsolutePath());
-				}
+				File fout = new File(new File(JOIN_FILE_PATH),JOIN_FILE_PREFIX + EXTENSION);
+														// Checking if file already exists,
+														// changing name accordingly
+				int subFile = 0;
+				while(fout.exists()){
+					subFile++;
+					fout = new File(new File(JOIN_FILE_PATH),
+							JOIN_FILE_PREFIX + "_" + subFile + EXTENSION);
 				}
 				FileOutputStream fos = new FileOutputStream(fout);
+
+				// Calculate total size of all partfiles
+				int blocks = 0;
+				for (File f : partfiles)
+					blocks += (int) (f.length()/BUFFER_SIZE);
+
 				for (File part : partfiles) {
 					fis = new FileInputStream(part);
 					byte[] buffer = new byte[BUFFER_SIZE];  // 1 MB
-					int blocks = (int) (part.length()/(BUFFER_SIZE));
-					counter = 1;
-					publishProgress(0,blocks);
-
 					while(fis.read(buffer) != -1){
-						publishProgress(counter,blocks);                    // update progressbar
+						publishProgress(counter,blocks); // update progressbar
 						fos.write(buffer);              // write data from input part to output file
 						counter ++;                     // increase MB counter
 					}
 					fis.close();					// close the part file
 				}
 				fos.close();                        // close the output file
-
 			}
 			catch(IOException ioe){
 				ioe.printStackTrace();
@@ -229,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
 				tv_output_join.setText(getString(R.string.join_fin));
 				Toast.makeText(MainActivity.this,
 						getString(R.string.join_savepath,
-								EXTERNAL),
+								JOIN_FILE_PATH),
 						Toast.LENGTH_LONG).show();
 			}
 
@@ -250,6 +261,7 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
+	@SuppressLint("SourceLockedOrientationActivity")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -297,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View v) {
 				if(permissionRequired()) return;
-				String path = txt_dir.getText().toString();
+				final String path = txt_dir.getText().toString();
 				if(path.equals("")){
 					Toast.makeText(MainActivity.this,
 							getString(R.string.join_empty_path),
@@ -332,9 +344,9 @@ public class MainActivity extends AppCompatActivity {
 		super.onActivityResult(requestCode, resultCode, data);
 
 		if (data != null && resultCode == RESULT_OK) {
+
 			if (requestCode == REQ_CODE_GET_SPLIT_FILE) {
-				String path;
-				path = FileU.getPath(MainActivity.this, data.getData());
+				String path = FileU.getPath(MainActivity.this, data.getData());
 				if (path.equals("")) {
 					Toast.makeText(MainActivity.this,
 							getString(R.string.split_unknown_path),
@@ -342,6 +354,7 @@ public class MainActivity extends AppCompatActivity {
 					return;
 				}
 				txt_path.setText(path);
+				updateTxtOutputSplit();
 			}
 
 			if (requestCode == REQ_CODE_GET_JOIN_FILE) {
@@ -373,7 +386,7 @@ public class MainActivity extends AppCompatActivity {
 		String[] partFiles = dir.list(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith(FILE_PREFIX);
+				return name.startsWith(SPLIT_FILE_PREFIX);
 			}
 		});
 		if (partFiles != null) {
@@ -382,12 +395,46 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
+	private void updateTxtOutputSplit(){
+		String path = txt_path.getText().toString();
+		if(path.equals("")) {
+			tv_output_split.setText("");
+			return;
+		}
+		File file = new File(path);
+		if(!file.exists()){
+			tv_output_split.setText(getString(R.string.split_invalid_path));
+			return;
+		}
+		long bytes = file.length();
+		double sizeh = 0d;
+		double GB = 1024 * 1024 * 1024;
+		double MB = 1024 * 1024;
+		double KB = 1024;
+		String unit = "bytes";
+		if(bytes > GB){
+			sizeh = bytes/GB ;
+			unit = "GB";
+		}
+		else if(bytes > MB){
+			sizeh = bytes/MB ;
+			unit = "MB";
+		}
+		else if(bytes > KB){
+			sizeh = bytes/KB ;
+			unit = "KB";
+		}
+		String size = String.format(Locale.getDefault(),"%3.2f",sizeh);
+		int parts = (int) (bytes/BLOCK_SIZE);
+		tv_output_split.setText(String.format("%.40s%n%s %s%n", file.getName(), size,unit));
+	}
+
 	private void deleteParts(){
-		File f = new File(EXTERNAL);
+		File f = new File(SPLIT_FILE_PATH);
 		File[] LFSPartFiles = f.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith(FILE_PREFIX);
+				return name.startsWith(SPLIT_FILE_PREFIX);
 			}
 		});
 		if(LFSPartFiles == null || LFSPartFiles.length < 1)	return;
@@ -410,12 +457,12 @@ public class MainActivity extends AppCompatActivity {
 				== PackageManager.PERMISSION_GRANTED);
 	}
 
-	private void split(String path){
-		new Split().execute(path);
+	private void split(String... args){
+		new Split().execute(args);
 	}
 
-	private void join (String path){
-		new Join().execute(path);
+	private void join (String... args){
+		new Join().execute(args);
 	}
 
 	private void requestExternalStoragePermission(){
@@ -438,4 +485,9 @@ public class MainActivity extends AppCompatActivity {
 				.create().show();
 	}
 
+	private String getExtension(String fileName){
+		int ind = fileName.lastIndexOf(".");
+		if(ind == -1) return "";
+		return fileName.substring(ind);
+	}
 }
