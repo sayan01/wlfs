@@ -20,6 +20,7 @@
 		android:layout_marginTop="70dp"
 		android:padding="10dp"
 		android:textAlignment="center"
+		android:text="@string/split_choose_file"
 
 		/>
 
@@ -49,7 +50,6 @@
 		android:layout_marginEnd="10dp"
 		android:textSize="12sp"
 		android:layout_toEndOf="@+id/txt_path"
-		android:backgroundTint="@color/divider"
 		android:text="@string/btn_browse"
 		/>
 
@@ -109,7 +109,6 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_toEndOf="@id/txt_dir"
-		android:backgroundTint="@color/divider"
 		android:layout_marginTop="100dp"
 		android:layout_marginStart="10dp"
 		android:layout_marginEnd="10dp"

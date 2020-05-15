@@ -18,7 +18,7 @@
     <string name="split_cancel">Splitting Cancelled</string>
     <string name="split_savepath">LFS partfiles are saved in %1$s*</string>
     <string name="split_unknown_path">Please choose file from internal/external storage</string>
-
+    <string name="split_choose_file">Choose file to split</string>
 
     <string name="join_unknown_path">Please choose folder from internal/external storage</string>
     <string name="join_invalid_path">Directory does not exist</string>
@@ -28,7 +28,6 @@
     <string name="join_fin">Joining Complete</string>
     <string name="join_savepath">File saved in %1$s</string>
     <string name="join_cancel">Joining Cancelled</string>
-
 
 
 </resources>
