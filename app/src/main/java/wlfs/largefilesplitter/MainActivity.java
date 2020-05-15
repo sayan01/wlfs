@@ -195,13 +195,7 @@ public class MainActivity extends AppCompatActivity {
 			String path = strings[0];
 			try {
 				int counter = 1;    // counts no of megabytes of data read
-				File fdir = new File(path);
-				File[] partfiles = fdir.listFiles(new FilenameFilter() {
-					@Override
-					public boolean accept(File dir, String name) {
-						return name.startsWith(SPLIT_FILE_PREFIX);
-					}
-				});
+				File[] partfiles = getLFSPartFiles(path);
 				if(partfiles == null || partfiles.length < 1){
 					return new Exception();
 				}
@@ -435,21 +429,13 @@ public class MainActivity extends AppCompatActivity {
 			tv_output_join.setText("");
 			return;
 		}
-		File dir = new File(path);
-		if(!dir.exists()){
+		File[] partFiles = getLFSPartFiles(path);
+		if(partFiles == null){
 			tv_output_join.setText(getString(R.string.join_invalid_path));
 			return;
 		}
-		String[] partFiles = dir.list(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.startsWith(SPLIT_FILE_PREFIX);
-			}
-		});
-		if (partFiles != null) {
-			String msg = getString(R.string.join_found,partFiles.length);
-			tv_output_join.setText(msg);
-		}
+		String msg = getString(R.string.join_found,partFiles.length);
+		tv_output_join.setText(msg);
 	}
 
 	private void updateTxtOutputSplit(){
@@ -475,13 +461,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void deleteParts(){
-		File f = new File(SPLIT_FILE_PATH);
-		File[] LFSPartFiles = f.listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.startsWith(SPLIT_FILE_PREFIX);
-			}
-		});
+		File[] LFSPartFiles = getLFSPartFiles(SPLIT_FILE_PATH);
 		if(LFSPartFiles == null || LFSPartFiles.length < 1)	return;
 		for(File file : LFSPartFiles){
 			boolean success = file.delete();
@@ -580,18 +560,25 @@ public class MainActivity extends AppCompatActivity {
 					file
 			));
 		}
-
 		Intent intentShareFile = new Intent(Intent.ACTION_SEND_MULTIPLE);
 		intentShareFile.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 		intentShareFile.setType("*/*");
 		intentShareFile.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
-
 		startActivity(Intent.createChooser(intentShareFile, "Share File"));
-
-
 	}
 
 	private String removeLFS(String filename){
 		return filename.substring(0,filename.length()-4);
+	}
+
+	private File[] getLFSPartFiles(String path){
+		File dir = new File(path);
+		return dir.listFiles(new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return name.startsWith(SPLIT_FILE_PREFIX) && name.endsWith(".LFS");
+//				return true;
+			}
+		});
 	}
 }
