@@ -271,6 +271,7 @@ public class MainActivity extends AppCompatActivity {
 			txt_dir.setEnabled(true);
 			txt_path.setEnabled(true);
 			pb.setProgress(pb.getMax());
+			updateTxtOutputSplit();
 
 		}
 

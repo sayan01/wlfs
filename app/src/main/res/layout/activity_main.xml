@@ -8,11 +8,27 @@
 	tools:context=".MainActivity"
 	>
 
+
+
+	<TextView
+		android:id="@+id/tv_output_split"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:maxHeight="100dp"
+		android:textSize="20sp"
+		android:layout_centerHorizontal="true"
+		android:layout_marginTop="70dp"
+		android:padding="10dp"
+		android:textAlignment="center"
+
+		/>
+
 	<EditText
 		android:id="@+id/txt_path"
 		android:layout_width="300dp"
 		android:layout_height="50dp"
 		android:layout_marginStart="10dp"
+		android:layout_alignTop="@id/tv_output_split"
 		android:layout_marginTop="150dp"
 		android:inputType="text"
 		android:hint="@string/hint_text_input_split"
@@ -27,6 +43,7 @@
 		android:id="@+id/btn_browse_split"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
+		android:layout_alignTop="@id/tv_output_split"
 		android:layout_marginTop="150dp"
 		android:layout_marginStart="10dp"
 		android:layout_marginEnd="10dp"
@@ -47,20 +64,6 @@
 		android:text="@string/btn_split"
 		/>
 
-
-	<TextView
-		android:id="@+id/tv_output_split"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_alignTop="@id/btn_split"
-		android:maxHeight="100dp"
-		android:textSize="20sp"
-		android:layout_centerHorizontal="true"
-		android:layout_marginTop="70dp"
-		android:padding="10dp"
-		android:textAlignment="center"
-
-		/>
 
 	<ProgressBar
 		android:id="@+id/pb"
