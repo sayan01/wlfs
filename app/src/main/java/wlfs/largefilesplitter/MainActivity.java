@@ -434,7 +434,7 @@ public class MainActivity extends AppCompatActivity {
 			tv_output_join.setText(getString(R.string.join_invalid_path));
 			return;
 		}
-		String msg = getString(R.string.join_found,partFiles.length);
+		String msg = getString(R.string.join_found,getFolderName(path),partFiles.length);
 		tv_output_join.setText(msg);
 	}
 
@@ -566,5 +566,12 @@ public class MainActivity extends AppCompatActivity {
 //				return true;
 			}
 		});
+	}
+	private String getFolderName(String path){
+		File f = new File(path);
+		if(f.equals(new File(EXTERNAL))){
+			return "Internal Storage";
+		}
+		else return f.getName();
 	}
 }

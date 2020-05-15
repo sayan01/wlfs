@@ -76,13 +76,14 @@
 		android:id="@+id/tv_output_join"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:maxHeight="50dp"
+		android:maxHeight="100dp"
 		android:layout_marginTop="450dp"
 		android:layout_centerHorizontal="true"
 		android:layout_marginStart="50dp"
 		android:layout_marginEnd="50dp"
 		android:textSize="20sp"
 		android:padding="10dp"
+		android:textAlignment="center"
 		/>
 
 	<EditText

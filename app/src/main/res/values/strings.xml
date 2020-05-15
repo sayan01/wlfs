@@ -23,7 +23,7 @@
     <string name="join_unknown_path">Please choose folder from internal/external storage</string>
     <string name="join_invalid_path">Directory does not exist</string>
     <string name="join_empty_path">Please choose a folder where partfiles are present</string>
-    <string name="join_found">%1$d LFS Partfiles found in directory</string>
+    <string name="join_found">%1$s%n%2$d LFS Partfiles found in directory</string>
     <string name="join_progress">Joining, Please Wait</string>
     <string name="join_fin">Joining Complete</string>
     <string name="join_savepath">File saved in %1$s</string>
