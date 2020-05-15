@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
 					.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog, int which) {
-							shareFiles(new File(SPLIT_FILE_PATH));
+							shareFiles(getLFSPartFiles(SPLIT_FILE_PATH));
 						}
 					})
 					.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -535,28 +535,14 @@ public class MainActivity extends AppCompatActivity {
 		if(ind == -1) return "";
 		return fileName.substring(ind);
 	}
-	private void shareFiles(@Nullable File dir) {
-		if(dir == null){
-			dir = new File(SPLIT_FILE_PATH);
-		}
-
-		File[] partFiles = dir.listFiles(new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.startsWith(SPLIT_FILE_PREFIX) && name.endsWith(".LFS");
-//				return true;
-			}
-		});
+	private void shareFiles(File[] partFiles) {
 		if(partFiles == null || partFiles.length < 1)	return;
-
 		ArrayList<Uri> uris = new ArrayList<>();
 		for(File file : partFiles){
-
 			uris.add(
 					FileProvider.getUriForFile(
 					MainActivity.this,
-					MainActivity.this.
-							getApplicationContext().getPackageName() + ".provider",
+					MainActivity.this.getApplicationContext().getPackageName()+".provider",
 					file
 			));
 		}
