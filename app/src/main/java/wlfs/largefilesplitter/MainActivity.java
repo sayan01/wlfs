@@ -68,12 +68,14 @@ public class MainActivity extends AppCompatActivity {
 		@Override
 		protected void onPreExecute() {
 			tv_output_split.setText(getString(R.string.split_progress));
+			tv_output_join.setText("");
 			btn_browse_split.setEnabled(false);
 			btn_browse_join.setEnabled(false);
 			btn_join.setEnabled(false);
 			btn_split.setEnabled(false);
 			txt_path.setEnabled(false);
 			txt_dir.setEnabled(false);
+			setProgressSplit();
 		}
 
 		@Override
@@ -143,6 +145,7 @@ public class MainActivity extends AppCompatActivity {
 			btn_split.setEnabled(true);
 			txt_dir.setEnabled(true);
 			txt_path.setEnabled(true);
+			pb.setProgress(pb.getMax());
 
 			updateTxtOutputJoin();
 
@@ -181,13 +184,14 @@ public class MainActivity extends AppCompatActivity {
 			super.onPreExecute();
 
 			tv_output_join.setText(getString(R.string.join_progress));
+			tv_output_split.setText("");
 			btn_browse_split.setEnabled(false);
 			btn_browse_join.setEnabled(false);
 			btn_join.setEnabled(false);
 			btn_split.setEnabled(false);
 			txt_path.setEnabled(false);
 			txt_dir.setEnabled(false);
-
+			setProgressJoin();
 		}
 
 		@Override
@@ -266,6 +270,7 @@ public class MainActivity extends AppCompatActivity {
 			btn_split.setEnabled(true);
 			txt_dir.setEnabled(true);
 			txt_path.setEnabled(true);
+			pb.setProgress(pb.getMax());
 
 		}
 
@@ -388,6 +393,7 @@ public class MainActivity extends AppCompatActivity {
 		}
 		txt_path.setText(path);
 		updateTxtOutputSplit();
+		setProgressSplit();
 	}
 
 	@Override
@@ -406,6 +412,7 @@ public class MainActivity extends AppCompatActivity {
 				}
 				txt_path.setText(path);
 				updateTxtOutputSplit();
+				setProgressSplit();
 			}
 
 			if (requestCode == REQ_CODE_GET_JOIN_FILE) {
@@ -418,12 +425,14 @@ public class MainActivity extends AppCompatActivity {
 				}
 				txt_dir.setText(path);
 				updateTxtOutputJoin();
+				setProgressJoin();
 
 			}
 		}
 	}
 
 	private void updateTxtOutputJoin(){
+
 		String path = txt_dir.getText().toString();
 		if(path.equals("")) {
 			tv_output_join.setText("");
@@ -573,5 +582,20 @@ public class MainActivity extends AppCompatActivity {
 			return "Internal Storage";
 		}
 		else return f.getName();
+	}
+
+	private void setProgressSplit(){
+		pb.setProgress(0);
+		pb.getProgressDrawable().setColorFilter(
+				ContextCompat.getColor(MainActivity.this, R.color.colorPrimary) ,
+				android.graphics.PorterDuff.Mode.SRC_IN);
+
+	}
+	private void setProgressJoin(){
+		pb.setProgress(0);
+		pb.getProgressDrawable().setColorFilter(
+				ContextCompat.getColor(MainActivity.this, R.color.colorAccent) ,
+				android.graphics.PorterDuff.Mode.SRC_IN);
+
 	}
 }
