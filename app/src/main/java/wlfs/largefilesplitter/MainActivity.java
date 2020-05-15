@@ -47,9 +47,15 @@ public class MainActivity extends AppCompatActivity {
 	private final String SPLIT_FILE_PREFIX = "LFS-part";
 	private final String JOIN_FILE_PREFIX = "LFS-output";
 	private final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
-	private final String SPLIT_FILE_PATH = EXTERNAL;
-	private final String JOIN_FILE_PATH = EXTERNAL;
+	/*
+	relative path from internal storage
+	*/
+	private final String SPLIT_FILE_PATH_ = "LFS/partfiles/";
+	private final String JOIN_FILE_PATH_ = "LFS/output/";
 	private final String WHATSAPP_DIR = "WhatsApp/Media/WhatsApp Documents/";
+
+	private final String SPLIT_FILE_PATH = getSplitFilePath();	// gets full path
+	private final String JOIN_FILE_PATH = getJoinFilePath();	// gets full path
 
 	private Button btn_join;
 	private Button btn_split;
@@ -283,6 +289,14 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
+
+	private String getSplitFilePath(){
+		return new File(new File(EXTERNAL),SPLIT_FILE_PATH_).getAbsolutePath();
+	}
+	private String getJoinFilePath(){
+		return new File(new File(EXTERNAL),JOIN_FILE_PATH_).getAbsolutePath();
+	}
+
 	@SuppressLint("SourceLockedOrientationActivity")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -299,6 +313,25 @@ public class MainActivity extends AppCompatActivity {
 		txt_path = findViewById(R.id.txt_path);
 		txt_dir = findViewById(R.id.txt_dir);
 		pb = findViewById(R.id.pb);
+
+		if(!permissionRequired()){
+			File join_output_path = new File(JOIN_FILE_PATH);
+			File split_output_path = new File(SPLIT_FILE_PATH);
+			if(!join_output_path.exists()){
+				boolean success = join_output_path.mkdirs();
+				String msg = success? "LFS directory made in " + EXTERNAL :
+						"Unable to create LFS directory";
+				Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+				if(!success)System.exit(1);
+			}
+			if(!split_output_path.exists()){
+				boolean success = split_output_path.mkdirs();
+				String msg = success? "LFS directory made in " + EXTERNAL :
+						"Unable to create LFS directory";
+				Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+				if(!success)System.exit(1);
+			}
+		}
 
 		txt_dir.addTextChangedListener(new TextWatcher() {
 			@Override
@@ -517,6 +550,19 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void join (String... args){
+		File [] files = getLFSPartFiles(args[0]);
+		if(files == null){
+			Toast.makeText(MainActivity.this,
+					"Invalid directory",
+					Toast.LENGTH_SHORT).show();
+			return;
+		}
+		if (files.length < 1){
+			Toast.makeText(MainActivity.this,
+					"No LFS files in directory",
+					Toast.LENGTH_SHORT).show();
+			return;
+		}
 		new Join().execute(args);
 	}
 
