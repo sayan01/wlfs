@@ -52,11 +52,15 @@ class FileU {
 	}
 
 	static String getPath(Context context, Uri uri){
-
 		try {
 			String rv;
 			String path = uri.getPath();
 			if (path == null) return "";
+
+			if(isES(uri) || path.startsWith("/storage")){
+				return path;
+			}
+
 			String[] token = path.split(":");
 			String device = token[0].substring(token[0].lastIndexOf("/") + 1);
 
@@ -64,7 +68,7 @@ class FileU {
 				return "";
 			}
 
-			if (FileU.isMediaDocument(uri)) {
+			if (isMediaDocument(uri)) {
 				final String docId = DocumentsContract.getDocumentId(uri);
 				final String[] split = docId.split(":");
 				final String type = split[0];
@@ -82,8 +86,9 @@ class FileU {
 				final String[] selectionArgs = new String[]{
 						split[1]
 				};
-				return FileU.getDataColumn(context, contentUri, selectionArgs);
+				return getDataColumn(context, contentUri, selectionArgs);
 			}
+
 
 			path = token[1];
 			for (int i = 2; i < token.length; i++) {
@@ -125,6 +130,11 @@ class FileU {
 
 	private static boolean isMediaDocument(Uri uri) {
 		return "com.android.providers.media.documents".equals(uri.getAuthority());
+	}
+
+	private static boolean isES(Uri uri) {
+		if(uri.getAuthority() == null)return false;
+		return uri.getAuthority().contains("estrongs");
 	}
 
 }

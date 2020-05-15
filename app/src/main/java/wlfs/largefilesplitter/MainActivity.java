@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
 	private final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
 	private final String SPLIT_FILE_PATH = EXTERNAL;
 	private final String JOIN_FILE_PATH = EXTERNAL;
+	private final String WHATSAPP_DIR = "WhatsApp/Media/WhatsApp Documents/";
 
 	private Button btn_join;
 	private Button btn_split;
@@ -310,6 +311,17 @@ public class MainActivity extends AppCompatActivity {
 			public void afterTextChanged(Editable s){}
 		});
 
+		txt_path.addTextChangedListener(new TextWatcher() {
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				updateTxtOutputSplit();
+			}
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count, int after){}
+			@Override
+			public void afterTextChanged(Editable s){}
+		});
+
 		btn_split.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -358,6 +370,30 @@ public class MainActivity extends AppCompatActivity {
 
 			}
 		});
+
+		handleOpenFileIntent();
+
+		File whatsApp = new File(new File(EXTERNAL), WHATSAPP_DIR);
+		if(whatsApp.exists()) {
+			txt_dir.setText(whatsApp.getAbsolutePath());
+		}
+
+	}
+
+	private void handleOpenFileIntent(){
+		if(!txt_path.isEnabled())	return;
+		Uri uri = getIntent().getData();
+		if(uri == null){
+			return;
+		}
+		String path = FileU.getPath(MainActivity.this, uri);
+		if(path == null || path.equals("")){
+			Toast.makeText(MainActivity.this,
+					"Could not open file",
+					Toast.LENGTH_SHORT).show();
+		}
+		txt_path.setText(path);
+		updateTxtOutputSplit();
 	}
 
 	@Override
