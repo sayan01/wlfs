@@ -588,7 +588,7 @@ public class MainActivity extends AppCompatActivity {
 	private void setProgressSplit(){
 		pb.setProgress(0);
 		pb.getProgressDrawable().setColorFilter(
-				ContextCompat.getColor(MainActivity.this, R.color.colorPrimary) ,
+				ContextCompat.getColor(MainActivity.this, R.color.color) ,
 				android.graphics.PorterDuff.Mode.SRC_IN);
 
 	}
