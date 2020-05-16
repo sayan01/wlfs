@@ -34,7 +34,7 @@
         The partfiles will cause problems if they persist and
         also take up additional storage space in your device.\n\n
         Do you want to delete them?\n
-        \nDeleting will free up ___gb of storage\n
+        \nDeleting will free up %1$s of storage\n
     </string>
 
     <string name="pref_delete_partfiles">deletepartfiles</string>

@@ -1,6 +1,7 @@
 package wlfs.largefilesplitter;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -12,9 +13,13 @@ import android.os.Environment;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -26,6 +31,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -36,7 +43,7 @@ import java.util.Locale;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
-
+@SuppressWarnings("FieldCanBeLocal")
 public class MainActivity extends AppCompatActivity {
 
 	private final int STORAGE_PERM_CODE = 1;
@@ -92,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
 				int num = 1;        // output file prefix
 				File f = new File(path);
 				String EXTENSION = getExtension(f.getName());
+				String NAME = getName(f.getName());
 				FileInputStream fis = new FileInputStream(f);
 				FileOutputStream fos = new FileOutputStream(
 						new File(SPLIT_FILE_PATH,
@@ -143,6 +151,24 @@ public class MainActivity extends AppCompatActivity {
 						getString(R.string.split_savepath,
 								SPLIT_FILE_PATH + "/" + SPLIT_FILE_PREFIX),
 						Toast.LENGTH_LONG).show();
+
+				new AlertDialog.Builder(MainActivity.this, R.style.AlertDialogTheme)
+						.setTitle("Share partfiles")
+						.setMessage("Do you want to share partfiles? ")
+						.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								shareFiles(getLFSPartFiles(SPLIT_FILE_PATH));
+							}
+						})
+						.setNegativeButton("No", new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								dialog.dismiss();
+							}
+						})
+						.create().show();
+
 			}
 
 			btn_browse_split.setEnabled(true);
@@ -154,24 +180,6 @@ public class MainActivity extends AppCompatActivity {
 			pb.setProgress(pb.getMax());
 
 			updateTxtOutputJoin();
-
-			new AlertDialog.Builder(MainActivity.this)
-					.setTitle("Share partfiles")
-					.setMessage("Do you want to share partfiles? ")
-					.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							shareFiles(getLFSPartFiles(SPLIT_FILE_PATH));
-						}
-					})
-					.setNegativeButton("No", new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog, int which) {
-							dialog.dismiss();
-						}
-					})
-					.create().show();
-
 		}
 
 		@Override
@@ -268,6 +276,64 @@ public class MainActivity extends AppCompatActivity {
 						getString(R.string.join_savepath,
 								JOIN_FILE_PATH),
 						Toast.LENGTH_LONG).show();
+
+				String delete = getDefaults(getString(R.string.pref_delete_partfiles));
+				if(delete == null || delete.equals("")){
+
+					String lfsPartFilesSize =
+							getHumanReadableFileSize(
+									getFilesSize(
+											getLFSPartFiles(
+													txt_dir.getText().toString())));
+
+					LinearLayout ll = new LinearLayout(MainActivity.this);
+					LinearLayout.LayoutParams params =
+							new LinearLayout.LayoutParams(
+									ViewGroup.LayoutParams.MATCH_PARENT,
+									ViewGroup.LayoutParams.MATCH_PARENT);
+					params.gravity = Gravity.CENTER;
+
+					final CheckBox no_confirm = new CheckBox(MainActivity.this);
+					no_confirm.setText(R.string.join_delete_partfiles_noconfirm);
+					no_confirm.setPadding(20,0,0,0);
+					no_confirm.setLayoutParams(params);
+
+					ll.addView(no_confirm);
+					ll.setPadding(30,0,0,0);
+
+					new MaterialAlertDialogBuilder(MainActivity.this
+							,R.style.AlertDialogTheme)
+							.setTitle("Delete PartFiles")
+							.setMessage(getString(R.string.join_delete_partfiles,lfsPartFilesSize))
+							.setView(ll)
+							.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									if(no_confirm.isChecked()){
+										setDefaults(
+												getString(R.string.pref_delete_partfiles)
+												,"true");
+									}
+									deleteParts(getLFSPartFiles(txt_dir.getText().toString()));
+								}
+							})
+							.setNegativeButton("No", new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog, int which) {
+									if(no_confirm.isChecked()){
+										setDefaults(
+												getString(R.string.pref_delete_partfiles)
+												,"false");
+									}
+								}
+							})
+							.show();
+				}
+				else{
+					if(delete.contains("true")){
+						deleteParts(getLFSPartFiles(txt_dir.getText().toString()));
+					}
+				}
 			}
 
 			btn_browse_split.setEnabled(true);
@@ -303,7 +369,6 @@ public class MainActivity extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
 		btn_join = findViewById(R.id.btn_join);
 		btn_split = findViewById(R.id.btn_split);
 		btn_browse_split = findViewById(R.id.btn_browse_split);
@@ -514,6 +579,16 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
+	private void deleteParts(File[] LFSPartFiles){
+		if(LFSPartFiles == null || LFSPartFiles.length < 1)	return;
+		for(File file : LFSPartFiles){
+			boolean success = file.delete();
+			if(!success){
+				Log.d("ERROR","Unable to delete file "+file.getAbsolutePath());
+			}
+		}
+	}
+
 	private String getHumanReadableFileSize(long bytes){
 		double sizeh = bytes;
 		double GB = 1024 * 1024 * 1024;
@@ -573,7 +648,8 @@ public class MainActivity extends AppCompatActivity {
 				.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 					@Override
 					public void onClick(DialogInterface dialog, int which) {
-						ActivityCompat.requestPermissions(MainActivity.this,new String[] {WRITE_EXTERNAL_STORAGE},STORAGE_PERM_CODE);
+						ActivityCompat.requestPermissions(MainActivity.this,
+								new String[] {WRITE_EXTERNAL_STORAGE},STORAGE_PERM_CODE);
 					}
 				})
 				.setNegativeButton("Exit", new DialogInterface.OnClickListener() {
@@ -633,6 +709,7 @@ public class MainActivity extends AppCompatActivity {
 
 	private void setProgressSplit(){
 		pb.setProgress(0);
+		pb.setVisibility(View.VISIBLE);
 		pb.getProgressDrawable().setColorFilter(
 				ContextCompat.getColor(MainActivity.this, R.color.color) ,
 				android.graphics.PorterDuff.Mode.SRC_IN);
@@ -640,9 +717,33 @@ public class MainActivity extends AppCompatActivity {
 	}
 	private void setProgressJoin(){
 		pb.setProgress(0);
+		pb.setVisibility(View.VISIBLE);
 		pb.getProgressDrawable().setColorFilter(
 				ContextCompat.getColor(MainActivity.this, R.color.colorAccent) ,
 				android.graphics.PorterDuff.Mode.SRC_IN);
-
 	}
+
+	private void setDefaults(String field, String value){
+		getPreferences(Context.MODE_PRIVATE).edit().putString(field, value).apply();
+	}
+
+	private String getDefaults(String field){
+		return getPreferences(Context.MODE_PRIVATE).getString(field,null);
+	}
+
+	private String getName(String filename) {
+		int ind = filename.lastIndexOf(".");
+		if(ind == -1) return filename;
+		return filename.substring(0,ind);
+	}
+
+	private long getFilesSize(File[] files){
+		if(files == null || files.length < 1) return 0L;
+		long filesSize = 0L;
+		for(File file : files){
+			filesSize += file.length();
+		}
+		return filesSize;
+	}
+
 }
