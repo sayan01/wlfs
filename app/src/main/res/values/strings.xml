@@ -28,6 +28,15 @@
     <string name="join_fin">Joining Complete</string>
     <string name="join_savepath">File saved in %1$s</string>
     <string name="join_cancel">Joining Cancelled</string>
+    <string name="join_delete_partfiles_noconfirm">Don\'t Ask Again</string>
+    <string name="join_delete_partfiles">Joining partfiles is successful.
+        These partfiles are no longer required and can be safely deleted.
+        The partfiles will cause problems if they persist and
+        also take up additional storage space in your device.\n\n
+        Do you want to delete them?\n
+        \nDeleting will free up ___gb of storage\n
+    </string>
 
+    <string name="pref_delete_partfiles">deletepartfiles</string>
 
 </resources>
