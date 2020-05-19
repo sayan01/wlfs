@@ -375,14 +375,6 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-
-	private String getSplitFilePath(){
-		return new File(new File(EXTERNAL),SPLIT_FILE_PATH_).getAbsolutePath();
-	}
-	private String getJoinFilePath(){
-		return new File(new File(EXTERNAL),JOIN_FILE_PATH_).getAbsolutePath();
-	}
-
 	@SuppressLint("SourceLockedOrientationActivity")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -718,12 +710,10 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private File[] getLFSPartFiles(String path){
-		File dir = new File(path);
-		return dir.listFiles(new FilenameFilter() {
+		return new File(path).listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				return name.startsWith(SPLIT_FILE_PREFIX) && name.endsWith(".LFS");
-//				return true;
 			}
 		});
 	}
@@ -772,6 +762,13 @@ public class MainActivity extends AppCompatActivity {
 			filesSize += file.length();
 		}
 		return filesSize;
+	}
+
+	private String getSplitFilePath(){
+		return new File(new File(EXTERNAL),SPLIT_FILE_PATH_).getAbsolutePath();
+	}
+	private String getJoinFilePath(){
+		return new File(new File(EXTERNAL),JOIN_FILE_PATH_).getAbsolutePath();
 	}
 
 }
