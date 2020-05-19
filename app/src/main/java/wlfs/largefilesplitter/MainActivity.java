@@ -52,7 +52,6 @@ public class MainActivity extends AppCompatActivity {
 	private final int BLOCK_SIZE = 64; // Size of each output part (split) in MB
 	private final int BUFFER_SIZE = 1024 * 1024; // 1MB
 	private final String SPLIT_FILE_PREFIX = "LFS-part";
-	private final String JOIN_FILE_PREFIX = "LFS-output";
 	private final String EXTERNAL = Environment.getExternalStorageDirectory().getAbsolutePath();
 	/*
 	relative path from internal storage
@@ -98,12 +97,11 @@ public class MainActivity extends AppCompatActivity {
 				int counter = 0;    // counts no of megabytes of data read
 				int num = 1;        // output file prefix
 				File f = new File(path);
-				String EXTENSION = getExtension(f.getName());
-				String NAME = getName(f.getName());
+				String NAME = f.getName();	// along with extension
 				FileInputStream fis = new FileInputStream(f);
 				FileOutputStream fos = new FileOutputStream(
 						new File(SPLIT_FILE_PATH,
-								 SPLIT_FILE_PREFIX + num + EXTENSION + ".LFS" ));
+								 SPLIT_FILE_PREFIX + num + "-" + NAME + ".LFS" ));
 
 				byte[] buffer = new byte[BUFFER_SIZE];  // 1 MB
 				int blocks = (int) Math.ceil(f.length()/(1d*BUFFER_SIZE));
@@ -116,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
 						fos.close();                                    // close current output file
 						fos = new FileOutputStream(                     // and open a new output file
 								new File(SPLIT_FILE_PATH,
-										SPLIT_FILE_PREFIX + num + EXTENSION + ".LFS" ));
+										SPLIT_FILE_PREFIX + num + "-" + NAME + ".LFS" ));
 					}
 					fos.write(buffer);              // write data from input file to output part
 					counter ++;                     // increase MB counter
@@ -217,16 +215,18 @@ public class MainActivity extends AppCompatActivity {
 				if(partfiles == null || partfiles.length < 1){
 					return new Exception();
 				}
-				String EXTENSION =  getExtension(removeLFS(partfiles[0].getName()));
+				String NAME =  removeLFS(partfiles[0].getName());
+				String EXTENSION = getExtension(NAME);
+				String NAME_WITHOUT_EXTENSION = getName(NAME);
 				FileInputStream fis;
-				File fout = new File(new File(JOIN_FILE_PATH),JOIN_FILE_PREFIX + EXTENSION);
+				File fout = new File(new File(JOIN_FILE_PATH), NAME);
 														// Checking if file already exists,
 														// changing name accordingly
 				int subFile = 0;
 				while(fout.exists()){
 					subFile++;
 					fout = new File(new File(JOIN_FILE_PATH),
-							JOIN_FILE_PREFIX + "_" + subFile + EXTENSION);
+							NAME_WITHOUT_EXTENSION + "_" + subFile + EXTENSION);
 				}
 				FileOutputStream fos = new FileOutputStream(fout);
 
@@ -685,8 +685,16 @@ public class MainActivity extends AppCompatActivity {
 		startActivity(Intent.createChooser(intentShareFile, "Share File"));
 	}
 
+	/**
+	 *
+	 * @param filename name of partfile
+	 * @return String: filename without LFS tags
+	 */
 	private String removeLFS(String filename){
-		return filename.substring(0,filename.length()-4);
+		String rv = filename.substring(0,filename.length()-4);	// removing trailing .LFS
+		int ind = filename.indexOf(SPLIT_FILE_PREFIX) + SPLIT_FILE_PREFIX.length();
+		ind = filename.indexOf("-",ind) + 1;
+		return rv.substring(ind);
 	}
 
 	private File[] getLFSPartFiles(String path){
