@@ -94,6 +94,16 @@ public class MainActivity extends AppCompatActivity {
 		protected Exception doInBackground(String... strings) {
 			String path = strings[0];
 			try {
+				File split_path = new File(SPLIT_FILE_PATH);
+				if(!split_path.exists()){
+					boolean success = split_path.mkdirs();
+					if(!success){
+						Toast.makeText(MainActivity.this,
+								"Unable to create directory to put files in",
+								Toast.LENGTH_SHORT).show();
+						return new Exception();
+					}
+				}
 				int counter = 0;    // counts no of megabytes of data read
 				int num = 1;        // output file prefix
 				File f = new File(path);
@@ -210,6 +220,16 @@ public class MainActivity extends AppCompatActivity {
 		protected Exception doInBackground(String... strings) {
 			String path = strings[0];
 			try {
+				File join_path = new File(JOIN_FILE_PATH);
+				if(!join_path.exists()){
+					boolean success = join_path.mkdirs();
+					if (!success){
+						Toast.makeText(MainActivity.this,
+								"Unable to create directory for output file",
+								Toast.LENGTH_SHORT).show();
+						return new Exception();
+					}
+				}
 				int counter = 1;    // counts no of megabytes of data read
 				File[] partfiles = getLFSPartFiles(path);
 				if(partfiles == null || partfiles.length < 1){
