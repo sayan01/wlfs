@@ -8,11 +8,7 @@ Split files into smaller chunks (64MB) and Rejoin them.
 * Tap **split**
 * Share partfiles
 
-<img src = "img/start.png" width="200" style="padding:20"/> 
-<img src = "img/split_1.png" width="200" style ="padding: 20"/> 
-<img src = "img/split_2.png" width="200" style="padding: 20" /> 
-<img src = "img/split_3.png" width="200" style="padding:20"/>
-<img src = "img/split_4.png" width="200" style="padding:20"/>
+<img src = "img/start.png" width="200" style="padding:20"/> <img src = "img/split_1.png" width="200" style ="padding: 20"/> <img src = "img/split_2.png" width="200" style="padding: 20" /> <img src = "img/split_3.png" width="200" style="padding:20"/> <img src = "img/split_4.png" width="200" style="padding:20"/>
 
 ### Join
 * Open the app
@@ -20,12 +16,7 @@ Split files into smaller chunks (64MB) and Rejoin them.
 * Tap **join**
 * Delete partfiles after joining completes (recommended)
 
-<img src = "img/start.png" width="200" style="padding: 20"/> 
-<img src = "img/join_1.png" width="200" style="padding: 20" /> 
-<img src = "img/join_2.png" width="200" style="padding: 20"/> 
-<img src = "img/join_3.png" width="200" style="padding: 20"/> 
-<img src = "img/join_4.png" width="200" style="padding: 20"/> 
-<img src = "img/join_5.png" width="200" style="padding: 20"/>
+<img src = "img/start.png" width="200" style="padding: 20"/> <img src = "img/join_1.png" width="200" style="padding: 20" /> <img src = "img/join_2.png" width="200" style="padding: 20"/> <img src = "img/join_3.png" width="200" style="padding: 20"/> <img src = "img/join_4.png" width="200" style="padding: 20"/> <img src = "img/join_5.png" width="200" style="padding: 20"/>
 
 ## Permissions
 
@@ -54,8 +45,7 @@ The progress bar color denotes what operation is currently going on, green means
 #### How do I change the theme of the app? (light mode / dark mode)
 The app uses the system theme. Change your system theme to light mode or dark mode to change the app theme.
 
-<img src="img/faq_light.png" width="200" style="margin: 20" />
-<img src="img/start.png" width="200" style="margin: 20" />
+<img src="img/faq_light.png" width="200" style="margin: 20" /> <img src="img/start.png" width="200" style="margin: 20" />
 
 #### Is this app made by whatsapp?
 No. This app is made by an individual programmer and is not affiliated with WhatsApp in any way whatsoever.
