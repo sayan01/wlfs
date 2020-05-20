@@ -698,7 +698,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	/**
-	 *
+	 *	Removes LFS tags from partfiles (leading `SPLIT_FILE_PREFIX` and trailing `.LFS`)
 	 * @param filename name of partfile
 	 * @return String: filename without LFS tags
 	 */
