@@ -391,19 +391,19 @@ public class MainActivity extends AppCompatActivity {
 		txt_dir = findViewById(R.id.txt_dir);
 		pb = findViewById(R.id.pb);
 
-		if(!permissionRequired()){
+		if(permissionGranted()){
 			File join_output_path = new File(JOIN_FILE_PATH);
 			File split_output_path = new File(SPLIT_FILE_PATH);
 			if(!join_output_path.exists()){
 				boolean success = join_output_path.mkdirs();
-				String msg = success? "LFS directory made in " + EXTERNAL :
+				String msg = success? "LFS directory made in " + JOIN_FILE_PATH :
 						"Unable to create LFS directory";
 				Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
 				if(!success)System.exit(1);
 			}
 			if(!split_output_path.exists()){
 				boolean success = split_output_path.mkdirs();
-				String msg = success? "LFS directory made in " + EXTERNAL :
+				String msg = success? "LFS directory made in " + SPLIT_FILE_PATH :
 						"Unable to create LFS directory";
 				Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
 				if(!success)System.exit(1);
@@ -435,7 +435,10 @@ public class MainActivity extends AppCompatActivity {
 		btn_split.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if(permissionRequired()) return;
+				if(!permissionGranted()) {
+					requestExternalStoragePermission();
+					return;
+				}
 				String path = txt_path.getText().toString();
 				if(path.equals("")){
 					Toast.makeText(MainActivity.this,
@@ -451,7 +454,10 @@ public class MainActivity extends AppCompatActivity {
 		btn_join.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if(permissionRequired()) return;
+				if(!permissionGranted()) {
+					requestExternalStoragePermission();
+					return;
+				}
 				final String path = txt_dir.getText().toString();
 				if(path.equals("")){
 					Toast.makeText(MainActivity.this,
@@ -622,12 +628,7 @@ public class MainActivity extends AppCompatActivity {
 		return String.format(Locale.getDefault(),"%3.2f %s",sizeh,unit);
 	}
 
-	private boolean permissionRequired(){
-		if(ContextCompat.checkSelfPermission(MainActivity.this, WRITE_EXTERNAL_STORAGE)
-				== PackageManager.PERMISSION_GRANTED){
-			return false;
-		}
-		else requestExternalStoragePermission();
+	private boolean permissionGranted(){
 		return (ContextCompat.checkSelfPermission(MainActivity.this, WRITE_EXTERNAL_STORAGE)
 				== PackageManager.PERMISSION_GRANTED);
 	}
@@ -671,7 +672,7 @@ public class MainActivity extends AppCompatActivity {
 						System.exit(-1);
 					}
 				})
-				.create().show();
+				.show();
 	}
 
 	private String getExtension(String fileName){
