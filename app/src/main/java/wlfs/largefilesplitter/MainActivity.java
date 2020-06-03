@@ -711,13 +711,40 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private File[] getLFSPartFiles(String path){
-		return new File(path).listFiles(new FilenameFilter() {
+		File[] files =  new File(path).listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
 				return name.startsWith(SPLIT_FILE_PREFIX) && name.endsWith(".LFS");
 			}
 		});
+		if(files == null) return null;
+		/*
+		Sorting the files array
+		 */
+		int[] numbers = new int[files.length];
+		for (int i = 0; i < files.length; i++) {
+			numbers[i] = getNumber(files[i].getName());
+		}
+		for(int i = 0; i < files.length - 1; i++){
+			for( int j =  0; j < files.length -i - 1; j++){
+				if(numbers[j+1] < numbers[j]){
+					File temp = files[j];
+					files[j] = files[j+1];
+					files[j+1] = temp;
+
+					int num = numbers[j];
+					numbers[j] = numbers[j+1];
+					numbers[j+1] = num;
+				}
+			}
+		}
+		return files;
 	}
+	private int getNumber(String name){
+		int startIndex = name.indexOf(SPLIT_FILE_PREFIX) + SPLIT_FILE_PREFIX.length();
+		return Integer.parseInt(name.substring(startIndex, name.indexOf("-", startIndex)));
+	}
+
 	private String getFolderName(String path){
 		File f = new File(path);
 		if(f.equals(new File(EXTERNAL))){
